@@ -17,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.support.v7.widget.SearchView;
+import android.support.v4.view.MenuItemCompat;
 
 import com.aneeshjoshi.photogallery.models.GalleryItem;
 import com.aneeshjoshi.photogallery.models.GetPhotosResponse;
@@ -98,12 +100,17 @@ public class PhotoGalleryFragment extends Fragment {
         public static final int PER_PAGE = 100;
         public static final int PAGE = 1;
         public static final String EXTRAS = "url_s";
+        public String query = "matrix";
+
+        public FetchItemsTask(){};
+
+        public FetchItemsTask(String query){
+            this.query = query;
+        }
 
         @Override
         protected ArrayList<GalleryItem> doInBackground(Void... params) {
             try{
-                String query = "matrix"; //Just for testing
-
                 FlickrServiceInterface flickrServiceInterface = new FlickrFetchr().getServiceInterface();
                 GetPhotosResponse result;
                 if(query != null){
@@ -169,6 +176,10 @@ public class PhotoGalleryFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_photo_gallery, menu);
+
+        MenuItem item = menu.findItem(R.id.menu_item_search);
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(item);
+        searchView.setOnQueryTextListener(queryTextListener);
     }
 
     @Override
@@ -177,11 +188,26 @@ public class PhotoGalleryFragment extends Fragment {
             case R.id.menu_item_search:
                 getActivity().onSearchRequested();
                 return true;
-            case R.id.menu_item_clear:
-                return true;
+            //case R.id.menu_item_clear:
+              //  return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    SearchView.OnQueryTextListener queryTextListener = new SearchView.OnQueryTextListener(){
+        @Override
+        public boolean onQueryTextSubmit(String query) {
+            return false;
+        }
+
+        @Override
+        public boolean onQueryTextChange(String newText) {
+            if(newText.length()>=3) {
+                new FetchItemsTask(newText).execute();
+            }
+            return false;
+        }
+    };
 }
 
